@@ -47,6 +47,8 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - `render.yaml`
   - `README.md` updated with GitHub + Render deployment instructions
   - local git repository initialized with `git init`
+  - project was pushed to GitHub repository `https://github.com/AviPerry/Zarnuk.git`
+  - local branch `main` now tracks `origin/main`
 - Backend/controller alignment update:
   - current command now uses `S,I,1,<value>`
   - frequency command now uses `S,F,1,<value>`
@@ -183,3 +185,4 @@ Build a web system for monitoring and controlling STM32-based devices through a 
 - `.env`
 - `tools/serial_probe.py`
 - `tools/modem_at_session.py`
+- `render.yaml`

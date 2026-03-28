@@ -19,4 +19,6 @@
 - [x] Add per-device MQTT topic control to device creation flow
 - [x] Add login page and protect frontend/API/WebSocket with credentials
 - [x] Prepare project for GitHub + Render deployment
+- [x] Push project to GitHub repository `AviPerry/Zarnuk`
+- [ ] Create and configure Render Web Service from the GitHub repo
 - [ ] Run full hardware end-to-end validation with the actual controller responses

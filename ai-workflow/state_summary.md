@@ -94,6 +94,10 @@ Deployment readiness:
   - `render.yaml`
   - updated `README.md` with deploy steps
 - Local git repository is initialized.
+- Project is pushed to GitHub:
+  - `https://github.com/AviPerry/Zarnuk.git`
+- Branch:
+  - `main`
 
 Current main gap:
 - Final full hardware end-to-end validation with the real controller behavior and real telemetry interpretation is still pending.
