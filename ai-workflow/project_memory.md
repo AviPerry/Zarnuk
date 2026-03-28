@@ -45,6 +45,7 @@ Build a web system for monitoring and controlling STM32-based devices through a 
 - Deployment prep was added:
   - `.gitignore`
   - `render.yaml`
+  - `.python-version` pinned to `3.11.11` for Render compatibility
   - `README.md` updated with GitHub + Render deployment instructions
   - local git repository initialized with `git init`
   - project was pushed to GitHub repository `https://github.com/AviPerry/Zarnuk.git`

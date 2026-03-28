@@ -20,5 +20,6 @@
 - [x] Add login page and protect frontend/API/WebSocket with credentials
 - [x] Prepare project for GitHub + Render deployment
 - [x] Push project to GitHub repository `AviPerry/Zarnuk`
+- [x] Pin Render Python version to `3.11.11`
 - [ ] Create and configure Render Web Service from the GitHub repo
 - [ ] Run full hardware end-to-end validation with the actual controller responses

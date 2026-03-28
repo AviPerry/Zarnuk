@@ -91,6 +91,7 @@ Deployment readiness:
 - Project is prepared for GitHub + Render deployment.
 - Added:
   - `.gitignore`
+  - `.python-version` pinned to `3.11.11`
   - `render.yaml`
   - updated `README.md` with deploy steps
 - Local git repository is initialized.
