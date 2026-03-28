@@ -22,8 +22,10 @@ Frontend status:
   - per-device dashboard
   - `online/offline` indication
   - add device flow
-  - delete device flow
+  - delete device flow from dashboard and overview cards
   - per-device MQTT topic inputs on creation
+- Default seeded device list now includes only:
+  - `663E8435`
 - Recent UI fixes:
   - search no longer resets during live updates
   - repeated watch subscriptions were fixed

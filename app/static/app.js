@@ -78,9 +78,9 @@ function renderOverview() {
 }
 
 function buildDeviceCard(device) {
-  const button = document.createElement("button");
-  button.className = "device-card";
-  button.innerHTML = `
+  const card = document.createElement("article");
+  card.className = "device-card";
+  card.innerHTML = `
     <header>
       <strong class="mono">${device.sn}</strong>
       <span class="status-badge ${device.online ? "status-online" : "status-offline"}">${device.online ? "online" : "offline"}</span>
@@ -93,9 +93,18 @@ function buildDeviceCard(device) {
       <span>פקודות <strong class="mono">${device.command_topic}</strong></span>
       <span>טלמטריה <strong class="mono">${device.telemetry_topic}</strong></span>
     </div>
+    <div class="device-card-actions">
+      <button class="ghost-button" type="button" data-action="open">פתח</button>
+      <button class="ghost-button danger-button inline-danger" type="button" data-action="delete">מחק</button>
+    </div>
   `;
-  button.addEventListener("click", () => { window.location.hash = `/device/${device.sn}`; });
-  return button;
+  card.querySelector('[data-action="open"]').addEventListener("click", () => {
+    window.location.hash = `/device/${device.sn}`;
+  });
+  card.querySelector('[data-action="delete"]').addEventListener("click", async () => {
+    await deleteDevice(device.sn);
+  });
+  return card;
 }
 
 function renderDashboard() {

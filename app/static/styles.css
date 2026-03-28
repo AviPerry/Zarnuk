@@ -50,11 +50,17 @@ input { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; 
 .device-card {
   border: 1px solid var(--line);
   width: 100%;
-  text-align: left;
   color: inherit;
-  font: inherit;
 }
 .device-card:hover { transform: translateY(-2px); border-color: rgba(31, 122, 99, 0.35); }
+.device-card-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.device-card-actions .ghost-button {
+  flex: 1;
+}
 .device-card header, .panel-head, .toggle-row, .telemetry-meta, .device-status-line { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
 .mono { font-family: var(--mono); }
 .status-badge, .alert-pill {
@@ -103,6 +109,7 @@ input { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; 
 .action-button.secondary { background: linear-gradient(135deg, #775640, #5c4130); }
 .ghost-button { background: transparent; border: 1px solid var(--line); color: var(--ink); }
 .danger-button { margin-top: 18px; border-color: rgba(155, 45, 48, 0.22); color: var(--danger); }
+.inline-danger { margin-top: 0; }
 .wide { width: 100%; }
 .alerts-list { display: grid; gap: 10px; margin-top: 18px; }
 .alert-pill { justify-content: center; min-height: 46px; }

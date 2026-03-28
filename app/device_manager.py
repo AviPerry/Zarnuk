@@ -24,8 +24,6 @@ class DeviceManager:
     def _seed_devices(self) -> None:
         for sn, vin, battery, online in [
             ("663E8435", 12.7, 12.6, True),
-            ("12AF44D0", 11.1, 11.0, True),
-            ("8BCD102F", 12.4, 12.2, False),
         ]:
             alerts = [AlertName.LOW_BAT] if battery < LOW_BAT_THRESHOLD else []
             self.devices[sn] = DeviceState(

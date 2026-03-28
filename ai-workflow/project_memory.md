@@ -32,7 +32,9 @@ Build a web system for monitoring and controlling STM32-based devices through a 
 - Device management was added to the app:
   - create device from overview screen
   - delete device from device dashboard
+  - delete device directly from overview cards
   - `online/offline` indication remains visible
+  - default seed list was reduced to a single device: `663E8435`
 - Device creation now requires per-device MQTT topics:
   - `command_topic`
   - `telemetry_topic`
