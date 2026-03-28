@@ -28,8 +28,8 @@ class DeviceManager:
             alerts = [AlertName.LOW_BAT] if battery < LOW_BAT_THRESHOLD else []
             self.devices[sn] = DeviceState(
                 sn=sn,
-                command_topic=f"zeliger/{sn}/command",
-                telemetry_topic=f"zeliger/{sn}/telemetry",
+                command_topic=f"basa/{sn}/command",
+                telemetry_topic=f"basa/{sn}/telemetry",
                 online=online,
                 telemetry=DeviceTelemetry(
                     vin=vin,

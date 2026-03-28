@@ -62,8 +62,8 @@ Build a web system for monitoring and controlling STM32-based devices through a 
 - Current working broker for development is HiveMQ public broker.
 - Backend is configured to support real MQTT through `.env`.
 - Current working topics chosen for the modem path are:
-  - device publish telemetry to `zeliger/663E8435/telemetry`
-  - device subscribe for commands on `zeliger/663E8435/command`
+  - device publish telemetry to `basa/663E8435/telemetry`
+  - device subscribe for commands on `basa/663E8435/command`
 - Device routing is now topic-based.
 - Command payloads no longer include the serial number.
 - Each device now owns its own command/telemetry topics in the backend model.
@@ -134,9 +134,9 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - `AT+SSLEN:OFF`
   - `AT+MQTTUSER:zeliger`
   - `AT+MQTTPSW:zeliger123`
-  - `AT+MQTTCID:zeliger-663E8435-modem`
-  - publish topic: `zeliger/663E8435/telemetry`
-  - subscribe topic: `zeliger/663E8435/command`
+  - `AT+MQTTCID:basa-663E8435-modem`
+  - publish topic: `basa/663E8435/telemetry`
+  - subscribe topic: `basa/663E8435/command`
 - Verified modem status:
   - `AT+MQTTSTA:Connected`
 
@@ -145,10 +145,10 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - host: `broker.hivemq.com`
   - port: `1883`
   - TLS: `OFF`
-  - command topic: `zeliger/663E8435/command`
-  - telemetry topic: `zeliger/663E8435/telemetry`
+  - command topic: `basa/663E8435/command`
+  - telemetry topic: `basa/663E8435/telemetry`
 - Confirmed live telemetry ingestion:
-  - publishing JSON telemetry to `zeliger/663E8435/telemetry` updates device `663E8435` in the backend API
+  - publishing JSON telemetry to `basa/663E8435/telemetry` updates device `663E8435` in the backend API
   - publishing legacy controller telemetry like `1,4.20,228.0,1500.0,3` also updates device `663E8435`
 - Confirmed live command publishing:
   - calling `POST /api/devices/663E8435/output` now publishes frames without SN in the payload

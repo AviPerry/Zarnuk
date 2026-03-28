@@ -110,5 +110,5 @@ Important defaults currently in use:
   - `Admin / Admin123`
 - Example working device/topics:
   - SN: `663E8435`
-  - command topic: `zeliger/663E8435/command`
-  - telemetry topic: `zeliger/663E8435/telemetry`
+  - command topic: `basa/663E8435/command`
+  - telemetry topic: `basa/663E8435/telemetry`

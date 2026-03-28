@@ -68,8 +68,8 @@ The current working development broker is:
 
 Example device topics:
 
-- Command topic: `zeliger/663E8435/command`
-- Telemetry topic: `zeliger/663E8435/telemetry`
+- Command topic: `basa/663E8435/command`
+- Telemetry topic: `basa/663E8435/telemetry`
 
 Each device can define its own:
 
@@ -103,7 +103,7 @@ MQTT_ENABLED=true
 MQTT_HOST=broker.hivemq.com
 MQTT_PORT=1883
 MQTT_TLS=false
-MQTT_CLIENT_ID=zeliger-web-backend
+MQTT_CLIENT_ID=basa-web-backend
 AUTH_USERNAME=Admin
 AUTH_PASSWORD=Admin123
 SESSION_SECRET=replace-with-a-long-random-secret

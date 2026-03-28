@@ -18,11 +18,11 @@ services:
       - key: MQTT_TLS
         value: false
       - key: MQTT_CLIENT_ID
-        value: zeliger-web-backend
+        value: basa-web-backend
       - key: MQTT_COMMAND_TOPIC
-        value: zeliger/663E8435/command
+        value: basa/663E8435/command
       - key: MQTT_TELEMETRY_TOPIC
-        value: zeliger/663E8435/telemetry
+        value: basa/663E8435/telemetry
       - key: AUTH_USERNAME
         value: Admin
       - key: AUTH_PASSWORD

@@ -23,5 +23,6 @@
 - [x] Pin Render Python version to `3.11.11`
 - [x] Reduce default seeded devices to only `663E8435`
 - [x] Add delete action directly on overview device cards
+- [x] Replace default MQTT topics from `zeliger/...` to `basa/...`
 - [ ] Create and configure Render Web Service from the GitHub repo
 - [ ] Run full hardware end-to-end validation with the actual controller responses
