@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: mashder-zarnok
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MQTT_ENABLED
+        value: true
+      - key: MQTT_HOST
+        value: broker.hivemq.com
+      - key: MQTT_PORT
+        value: 1883
+      - key: MQTT_TLS
+        value: false
+      - key: MQTT_CLIENT_ID
+        value: zeliger-web-backend
+      - key: MQTT_COMMAND_TOPIC
+        value: zeliger/663E8435/command
+      - key: MQTT_TELEMETRY_TOPIC
+        value: zeliger/663E8435/telemetry
+      - key: AUTH_USERNAME
+        value: Admin
+      - key: AUTH_PASSWORD
+        sync: false

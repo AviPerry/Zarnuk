@@ -1,0 +1,22 @@
+## Current Tasks
+
+- [x] Build FastAPI + frontend MVP
+- [x] Add backend MQTT support and `.env` config
+- [x] Confirm modem serial communication on `COM3`
+- [x] Reconfigure modem from old EMQX settings to HiveMQ settings
+- [x] Verify which HiveMQ credentials are actually valid for the broker
+- [ ] Determine why `AT+MQTTSTA` remains `Disconnected`
+- [x] Prove whether modem MQTT and TLS work against a control broker
+- [x] Check whether the modem exposes documented SNI support
+- [x] Reconfigure modem to a working public broker with unique topics
+- [x] Prove modem subscription payloads are forwarded onto `COM3`/RS485
+- [x] Verify backend telemetry ingest and command publish against the public broker
+- [x] Fix frontend watch-state and search-reset issues before UI review
+- [x] Translate UI to Hebrew and rename app title
+- [x] Add device create/delete flow to the app
+- [x] Remove SN from outgoing command payloads and rely on topic-based routing
+- [x] Align backend control commands and telemetry parsing to the legacy RS485 controller format
+- [x] Add per-device MQTT topic control to device creation flow
+- [x] Add login page and protect frontend/API/WebSocket with credentials
+- [x] Prepare project for GitHub + Render deployment
+- [ ] Run full hardware end-to-end validation with the actual controller responses
