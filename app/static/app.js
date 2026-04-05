@@ -46,8 +46,20 @@ function upsertDevice(device) {
 }
 
 function refresh() {
-  if (state.selectedSn) renderDashboard();
-  else renderOverview();
+  if (state.selectedSn) {
+    const device = state.devices.find((entry) => entry.sn === state.selectedSn);
+    if (isDashboardMounted() && device) {
+      updateDashboardView(device);
+      return;
+    }
+    renderDashboard();
+    return;
+  }
+  renderOverview();
+}
+
+function isDashboardMounted() {
+  return Boolean(document.getElementById("device-title"));
 }
 
 function renderOverview() {
@@ -64,7 +76,9 @@ function renderOverview() {
     state.search = input.value.trim().toUpperCase();
     const filtered = state.devices.filter((device) => device.sn.includes(state.search));
     grid.replaceChildren(...filtered.map(buildDeviceCard));
-    if (!filtered.length) grid.innerHTML = `<article class="panel"><h3>לא נמצאו התקנים</h3><p>נסה מספר סידורי אחר.</p></article>`;
+    if (!filtered.length) {
+      grid.innerHTML = `<article class="panel"><h3>לא נמצאו התקנים</h3><p>נסה מספר סידורי אחר.</p></article>`;
+    }
   };
   input.addEventListener("input", draw);
   addForm.addEventListener("submit", async (event) => {
@@ -120,6 +134,19 @@ function renderDashboard() {
     unwatchDevice(device.sn);
     window.location.hash = "/";
   });
+  document.getElementById("output-on").addEventListener("click", () => sendOutput(device.sn, "on"));
+  document.getElementById("output-off").addEventListener("click", () => sendOutput(device.sn, "off"));
+  document.getElementById("delete-device-button").addEventListener("click", () => deleteDevice(device.sn));
+  document.getElementById("control-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    submitControls(device.sn);
+  });
+
+  updateDashboardView(device);
+  watchDevice(device.sn);
+}
+
+function updateDashboardView(device) {
   document.getElementById("device-title").textContent = `התקן ${device.sn}`;
   const statusEl = document.getElementById("device-online-badge");
   statusEl.textContent = device.online ? "online" : "offline";
@@ -131,8 +158,15 @@ function renderDashboard() {
   document.getElementById("battery-value").textContent = device.telemetry.battery_voltage.toFixed(2);
   document.getElementById("telemetry-topic-value").textContent = device.telemetry_topic;
   document.getElementById("command-topic-value").textContent = device.command_topic;
-  document.getElementById("current-input").value = device.telemetry.target_current.toFixed(2);
-  document.getElementById("frequency-input").value = device.telemetry.target_frequency.toFixed(2);
+
+  const currentInput = document.getElementById("current-input");
+  const frequencyInput = document.getElementById("frequency-input");
+  if (document.activeElement !== currentInput) {
+    currentInput.value = device.telemetry.target_current.toFixed(2);
+  }
+  if (document.activeElement !== frequencyInput) {
+    frequencyInput.value = device.telemetry.target_frequency.toFixed(2);
+  }
 
   const lowBat = device.telemetry.alerts.includes("LOW-BAT");
   document.getElementById("low-battery-warning").classList.toggle("hidden", !lowBat);
@@ -147,15 +181,6 @@ function renderDashboard() {
     pill.textContent = alert;
     return pill;
   }));
-
-  document.getElementById("output-on").addEventListener("click", () => sendOutput(device.sn, "on"));
-  document.getElementById("output-off").addEventListener("click", () => sendOutput(device.sn, "off"));
-  document.getElementById("delete-device-button").addEventListener("click", () => deleteDevice(device.sn));
-  document.getElementById("control-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    submitControls(device.sn);
-  });
-  watchDevice(device.sn);
 }
 
 async function createDevice(sn, commandTopic, telemetryTopic) {

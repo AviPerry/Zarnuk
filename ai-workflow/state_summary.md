@@ -30,6 +30,7 @@ Frontend status:
   - search no longer resets during live updates
   - repeated watch subscriptions were fixed
   - inline command feedback was added
+  - dashboard now updates live values in place instead of full-screen rerender on each poll
 
 Authentication status:
 - Cookie-based session auth is implemented.
@@ -76,6 +77,8 @@ Modem status:
   - IP assigned
   - signal available
 - Modem MQTT/TLS capability was verified against public HiveMQ brokers.
+- After the topic migration to `basa/...`, the modem still reports:
+  - `AT+MQTTSTA:Connected`
 
 Per-device topic model:
 - Each device now owns:

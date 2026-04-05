@@ -27,6 +27,8 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - preserved overview search text during live updates
   - added inline command feedback area in the dashboard
   - improved device card button styling/consistency
+  - dashboard live updates no longer rebuild the full DOM on every telemetry/poll message
+  - current/frequency inputs now preserve user focus while live updates continue
 - UI language is now Hebrew.
 - App title was renamed to `משדר זרנוק`.
 - Device management was added to the app:
@@ -139,6 +141,7 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - subscribe topic: `basa/663E8435/command`
 - Verified modem status:
   - `AT+MQTTSTA:Connected`
+  - rechecked successfully after topic migration to `basa/...`
 
 ### Verified Backend MQTT Flow
 - Backend `.env` now targets:
