@@ -162,17 +162,19 @@ class DeviceManager:
         self,
         sn: str,
         *,
-        vin: float,
+        vin: Optional[float] = None,
         v1: float,
         ir: float,
         frequency: float = 0.0,
-        battery_voltage: float,
+        battery_voltage: Optional[float] = None,
         short: bool,
         pwr_lim: bool,
         no_load: bool,
     ) -> None:
         valid_sn = validate_sn(sn)
         device = self.devices.setdefault(valid_sn, DeviceState(sn=valid_sn))
+        next_vin = device.telemetry.vin if vin is None else vin
+        next_battery_voltage = device.telemetry.battery_voltage if battery_voltage is None else battery_voltage
         alerts: list[AlertName] = []
         if short:
             alerts.append(AlertName.SHORT)
@@ -180,18 +182,18 @@ class DeviceManager:
             alerts.append(AlertName.PWR_LIM)
         if no_load:
             alerts.append(AlertName.NO_LOAD)
-        if battery_voltage < LOW_BAT_THRESHOLD:
+        if next_battery_voltage < LOW_BAT_THRESHOLD:
             alerts.append(AlertName.LOW_BAT)
         resistance = (v1 / ir) if abs(ir) > 1e-9 else 0.0
         power = v1 * ir
         device.telemetry = DeviceTelemetry(
-            vin=vin,
+            vin=next_vin,
             v1=v1,
             ir=ir,
             frequency=frequency,
             resistance=resistance,
             power=power,
-            battery_voltage=battery_voltage,
+            battery_voltage=next_battery_voltage,
             healthy=not any(alert in alerts for alert in [AlertName.SHORT, AlertName.PWR_LIM]),
             alerts=alerts,
             output_enabled=device.telemetry.output_enabled,

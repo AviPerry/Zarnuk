@@ -66,6 +66,7 @@ Controller compatibility status:
   - control bytes like `0x05` and `0x00` are stripped
   - controller frequency in `Hz` is converted to dashboard `kHz`
   - Distribution-mode prefixed payloads like `1,ch,I,V,F,STATUS` are accepted
+  - the legacy voltage field is treated as `V1` only, not as battery voltage
 - Example verified legacy telemetry:
   - `1,4.20,228.0,1500.0,3`
 

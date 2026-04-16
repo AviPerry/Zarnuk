@@ -107,11 +107,15 @@ class HiveMQClient:
         try:
             await self.manager.update_from_telemetry(
                 data["sn"],
-                vin=float(data.get("vin", 0.0)),
+                vin=float(data["vin"]) if data.get("vin") is not None else None,
                 v1=float(data.get("v1", 0.0)),
                 ir=float(data.get("ir", 0.0)),
                 frequency=float(data.get("frequency", 0.0)),
-                battery_voltage=float(data.get("battery_voltage", data.get("vin", 0.0))),
+                battery_voltage=(
+                    float(data["battery_voltage"])
+                    if data.get("battery_voltage") is not None
+                    else None
+                ),
                 short=bool(data.get("short", False)),
                 pwr_lim=bool(data.get("pwr_lim", False)),
                 no_load=bool(data.get("no_load", False)),
@@ -187,8 +191,8 @@ class HiveMQClient:
             "channel": channel,
             "ir": current,
             "v1": voltage,
-            "vin": voltage,
-            "battery_voltage": voltage,
+            "vin": None,
+            "battery_voltage": None,
             "frequency": frequency_raw / 1000.0,
             "short": bool(status & 1),
             "pwr_lim": bool(status & 2),

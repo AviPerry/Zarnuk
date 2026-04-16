@@ -28,6 +28,7 @@
 - [x] Silence UI updates for background `G` polling unless status changes
 - [x] Expand dashboard monitoring to show frequency, resistance, power, and battery voltage gauges
 - [x] Align legacy `G` telemetry parsing with the original PC GUI protocol
+- [x] Separate legacy `V1` handling from battery voltage without changing controller firmware
 - [x] Remove redundant bottom `VIN`/battery summary from the dashboard
 - [x] Add frontend API fallback sync and cache-busting for deployed static assets
 - [x] Prove broker -> serial forwarding works in modem `Distribution mode`

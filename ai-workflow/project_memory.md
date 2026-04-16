@@ -76,6 +76,8 @@ Build a web system for monitoring and controlling STM32-based devices through a 
     - strips framing/control bytes such as `0x05` and `0x00`
     - converts controller frequency from `Hz` to dashboard `kHz`
     - accepts Distribution-mode prefixed payloads such as `1,ch,I,V,F,STATUS`
+    - treats the legacy voltage field as output voltage `V1` only
+    - does not overwrite battery voltage from legacy frames because the controller does not send battery voltage separately
 
 ### MQTT Decisions
 - Initial target broker was HiveMQ Cloud.
