@@ -158,8 +158,6 @@ function updateDashboardView(device) {
   document.getElementById("resistance-value").textContent = device.telemetry.resistance.toFixed(2);
   document.getElementById("power-value").textContent = device.telemetry.power.toFixed(1);
   document.getElementById("battery-gauge-value").textContent = device.telemetry.battery_voltage.toFixed(2);
-  document.getElementById("vin-value").textContent = device.telemetry.vin.toFixed(2);
-  document.getElementById("battery-value").textContent = device.telemetry.battery_voltage.toFixed(2);
   document.getElementById("telemetry-topic-value").textContent = device.telemetry_topic;
   document.getElementById("command-topic-value").textContent = device.command_topic;
 

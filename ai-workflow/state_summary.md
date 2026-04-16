@@ -25,6 +25,7 @@ Frontend status:
   - delete device flow from dashboard and overview cards
   - per-device MQTT topic inputs on creation
   - monitoring gauges for `Ir`, `V1`, frequency, resistance, power, and battery voltage
+  - battery voltage now appears only in the gauge area; the old bottom `VIN`/battery summary row was removed
 - Default seeded device list now includes only:
   - `663E8435`
 - Recent UI fixes:
@@ -60,6 +61,10 @@ Controller compatibility status:
   - derived resistance
   - derived power
   - battery voltage in the dashboard gauge view
+- Legacy `G` telemetry compatibility was tightened:
+  - control bytes like `0x05` and `0x00` are stripped
+  - controller frequency in `Hz` is converted to dashboard `kHz`
+  - Distribution-mode prefixed payloads like `1,ch,I,V,F,STATUS` are accepted
 - Example verified legacy telemetry:
   - `1,4.20,228.0,1500.0,3`
 

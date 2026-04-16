@@ -30,6 +30,7 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - dashboard live updates no longer rebuild the full DOM on every telemetry/poll message
   - current/frequency inputs now preserve user focus while live updates continue
   - dashboard monitoring view now also shows frequency, resistance, power, and battery voltage as gauges
+  - redundant bottom `VIN` / battery summary row was removed from the dashboard to avoid confusion with channel output voltage
 - Polling UX hardening:
   - backend `G` poll commands are now silent for the UI
   - `last_command_hex` is no longer overwritten by background `G`
@@ -67,6 +68,11 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - backend also derives:
     - `resistance = V1 / Ir`
     - `power = V1 * Ir`
+  - legacy `G` telemetry handling is now aligned to the original PC GUI:
+    - accepts `ch,I,V,F,STATUS`
+    - strips framing/control bytes such as `0x05` and `0x00`
+    - converts controller frequency from `Hz` to dashboard `kHz`
+    - accepts Distribution-mode prefixed payloads such as `1,ch,I,V,F,STATUS`
 
 ### MQTT Decisions
 - Initial target broker was HiveMQ Cloud.

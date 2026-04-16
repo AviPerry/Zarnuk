@@ -127,11 +127,12 @@ class HiveMQClient:
             payload = payload[1:]
 
         try:
-            text = payload.decode("utf-8").strip()
+            text = payload.decode("utf-8", errors="ignore")
         except UnicodeDecodeError:
             logger.warning("Telemetry payload is not UTF-8 decodable yet")
             return None
 
+        text = self._sanitize_text(text)
         if not text:
             return None
 
@@ -166,6 +167,9 @@ class HiveMQClient:
 
     def _decode_legacy_csv(self, text: str, topic: str) -> Optional[dict[str, Any]]:
         parts = [part.strip() for part in text.split(",")]
+        if len(parts) >= 6 and self._looks_like_distribution_prefixed_legacy(parts):
+            parts = parts[1:]
+
         if len(parts) < 5:
             return None
         try:
@@ -185,11 +189,26 @@ class HiveMQClient:
             "v1": voltage,
             "vin": voltage,
             "battery_voltage": voltage,
-            "frequency": frequency_raw,
+            "frequency": frequency_raw / 1000.0,
             "short": bool(status & 1),
             "pwr_lim": bool(status & 2),
             "no_load": bool(status & 4),
         }
+
+    def _sanitize_text(self, text: str) -> str:
+        return "".join(ch for ch in text if ch == "\n" or ch == "\r" or 32 <= ord(ch) <= 126).strip()
+
+    def _looks_like_distribution_prefixed_legacy(self, parts: list[str]) -> bool:
+        try:
+            topic_index = int(float(parts[0]))
+            channel = int(float(parts[1]))
+            float(parts[2])
+            float(parts[3])
+            float(parts[4])
+            int(float(parts[5]))
+        except ValueError:
+            return False
+        return 1 <= topic_index <= 10 and channel in {0, 1, 2}
 
     def _infer_sn_from_topic(self, topic: str) -> str:
         for device in self.manager.devices.values():
