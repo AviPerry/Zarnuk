@@ -31,6 +31,9 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - current/frequency inputs now preserve user focus while live updates continue
   - dashboard monitoring view now also shows frequency, resistance, power, and battery voltage as gauges
   - redundant bottom `VIN` / battery summary row was removed from the dashboard to avoid confusion with channel output voltage
+  - frontend now performs an API fallback fetch for devices/device details in addition to WebSocket updates
+  - frontend merges incoming device updates while preserving non-empty MQTT topics
+  - static asset URLs now include a version query to reduce stale browser-cache issues after deployment
 - Polling UX hardening:
   - backend `G` poll commands are now silent for the UI
   - `last_command_hex` is no longer overwritten by background `G`

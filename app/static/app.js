@@ -41,8 +41,22 @@ function connectSocket() {
 
 function upsertDevice(device) {
   const index = state.devices.findIndex((entry) => entry.sn === device.sn);
-  if (index === -1) state.devices.push(device);
-  else state.devices[index] = device;
+  if (index === -1) {
+    state.devices.push(device);
+    return;
+  }
+
+  const existing = state.devices[index];
+  state.devices[index] = {
+    ...existing,
+    ...device,
+    command_topic: device.command_topic || existing.command_topic,
+    telemetry_topic: device.telemetry_topic || existing.telemetry_topic,
+    telemetry: {
+      ...existing.telemetry,
+      ...device.telemetry,
+    },
+  };
 }
 
 function refresh() {
@@ -144,6 +158,7 @@ function renderDashboard() {
 
   updateDashboardView(device);
   watchDevice(device.sn);
+  fetchDevice(device.sn);
 }
 
 function updateDashboardView(device) {
@@ -197,6 +212,30 @@ async function createDevice(sn, commandTopic, telemetryTopic) {
     return;
   }
   showOverviewFeedback(`ההתקן ${sn.toUpperCase()} נוסף בהצלחה.`);
+}
+
+async function fetchDevices() {
+  try {
+    const response = await fetch("/api/devices");
+    if (!response.ok) return;
+    const data = await response.json();
+    state.devices = data.devices || [];
+    refresh();
+  } catch (_) {
+    // Keep WebSocket as the main live path; this is only a resilience fallback.
+  }
+}
+
+async function fetchDevice(sn) {
+  try {
+    const response = await fetch(`/api/devices/${sn}`);
+    if (!response.ok) return;
+    const device = await response.json();
+    upsertDevice(device);
+    refresh();
+  } catch (_) {
+    // Ignore; live updates still arrive through WebSocket when available.
+  }
 }
 
 async function deleteDevice(sn) {
@@ -276,4 +315,5 @@ window.addEventListener("hashchange", route);
 window.addEventListener("beforeunload", () => { if (state.selectedSn) unwatchDevice(state.selectedSn); });
 
 connectSocket();
+fetchDevices();
 route();

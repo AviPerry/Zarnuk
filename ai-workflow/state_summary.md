@@ -26,6 +26,7 @@ Frontend status:
   - per-device MQTT topic inputs on creation
   - monitoring gauges for `Ir`, `V1`, frequency, resistance, power, and battery voltage
   - battery voltage now appears only in the gauge area; the old bottom `VIN`/battery summary row was removed
+  - frontend now has API fallback fetches and device-state merging to reduce empty-topic/stale-state issues
 - Default seeded device list now includes only:
   - `663E8435`
 - Recent UI fixes:
