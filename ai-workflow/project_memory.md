@@ -29,6 +29,10 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - improved device card button styling/consistency
   - dashboard live updates no longer rebuild the full DOM on every telemetry/poll message
   - current/frequency inputs now preserve user focus while live updates continue
+- Polling UX hardening:
+  - backend `G` poll commands are now silent for the UI
+  - `last_command_hex` is no longer overwritten by background `G`
+  - poll loop publishes `devices.snapshot` only when online/offline state actually changes
 - UI language is now Hebrew.
 - App title was renamed to `משדר זרנוק`.
 - Device management was added to the app:
@@ -165,6 +169,18 @@ Build a web system for monitoring and controlling STM32-based devices through a 
 - Confirmed device management API flow:
   - `POST /api/devices` creates a new device with explicit command/telemetry topics
   - `DELETE /api/devices/{sn}` removes it
+- Additional local end-to-end validation on `2026-04-05`:
+  - local FastAPI app started successfully with real startup path
+  - login API succeeded with `Admin / Admin123`
+  - authenticated `GET /api/devices` succeeded
+  - authenticated WebSocket `/ws` succeeded
+  - sending `watch` for `663E8435` caused automatic polling activity
+  - `POST /api/devices/663E8435/output` returned frame `01 53 2C 53 2C 31 2C 30 00`
+  - `POST /api/devices/663E8435/controls` returned frames for current and frequency updates
+  - backend device state updated `target_current=1.2` and `target_frequency=2.5`
+  - backend `last_command_hex` ended at `01 47 00`, confirming automatic `G` poll activity
+  - no fresh telemetry returned during this test window, so the device eventually appeared offline
+  - direct serial verification on `COM3` was blocked because the port was already in use by another process
 
 ### Remaining Modem-Path Uncertainty
 - Command-path delivery from MQTT back onto `COM3` is now confirmed.

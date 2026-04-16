@@ -63,9 +63,14 @@ class DeviceManager:
                 await self.send_command(sn, "G")
 
             now = time.time()
+            status_changed = False
             for device in self.devices.values():
-                device.online = (now - device.last_seen_epoch) <= ONLINE_TIMEOUT_SECONDS
-            await self._publish_devices()
+                next_online = (now - device.last_seen_epoch) <= ONLINE_TIMEOUT_SECONDS
+                if device.online != next_online:
+                    device.online = next_online
+                    status_changed = True
+            if status_changed:
+                await self._publish_devices()
 
     async def list_devices(self) -> list[DeviceState]:
         return list(self.devices.values())
@@ -116,16 +121,19 @@ class DeviceManager:
     async def send_command(self, sn: str, command: str) -> bytes:
         device = await self.get_device(sn)
         frame = build_command_frame(device.sn, command)
-        device.last_command_hex = frame_to_hex(frame)
+        is_poll_command = command.strip().upper() == "G"
+        if not is_poll_command:
+            device.last_command_hex = frame_to_hex(frame)
         if self._command_sender is not None:
             await self._command_sender(device.sn, frame, command)
-        await self.events.put(
-            EventEnvelope(
-                type="command.sent",
-                payload={"sn": device.sn, "command": command, "frameHex": device.last_command_hex},
+        if not is_poll_command:
+            await self.events.put(
+                EventEnvelope(
+                    type="command.sent",
+                    payload={"sn": device.sn, "command": command, "frameHex": device.last_command_hex},
+                )
             )
-        )
-        await self._publish_device(device.sn)
+            await self._publish_device(device.sn)
         return frame
 
     async def set_output(self, sn: str, enabled: bool) -> bytes:

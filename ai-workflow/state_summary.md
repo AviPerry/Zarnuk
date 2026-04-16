@@ -31,6 +31,7 @@ Frontend status:
   - repeated watch subscriptions were fixed
   - inline command feedback was added
   - dashboard now updates live values in place instead of full-screen rerender on each poll
+  - background `G` polling is now silent in the UI unless online/offline state changes
 
 Authentication status:
 - Cookie-based session auth is implemented.
@@ -91,6 +92,12 @@ Verified backend behavior:
 - Backend publishes live command frames to MQTT.
 - Device creation API works with explicit topics.
 - Device deletion API works.
+- Additional local end-to-end check on `2026-04-05`:
+  - login, API, and authenticated WebSocket all worked
+  - automatic watch-based polling triggered `G`
+  - command and control POSTs returned the expected frame hex
+  - no return telemetry arrived during that run
+  - `COM3` could not be inspected because it was busy
 
 Deployment readiness:
 - Project is prepared for GitHub + Render deployment.
