@@ -26,5 +26,9 @@
 - [x] Replace default MQTT topics from `zeliger/...` to `basa/...`
 - [x] Stop full dashboard rerender on each live polling update
 - [x] Silence UI updates for background `G` polling unless status changes
+- [x] Expand dashboard monitoring to show frequency, resistance, power, and battery voltage gauges
+- [x] Prove broker -> serial forwarding works in modem `Distribution mode`
+- [x] Prove `Transparent mode` is blocked in both directions after three clean-port test loops
+- [ ] Adapt controller/protocol handling for bidirectional `Distribution mode` operation
 - [ ] Create and configure Render Web Service from the GitHub repo
 - [ ] Run full hardware end-to-end validation with the actual controller responses

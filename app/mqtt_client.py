@@ -110,6 +110,7 @@ class HiveMQClient:
                 vin=float(data.get("vin", 0.0)),
                 v1=float(data.get("v1", 0.0)),
                 ir=float(data.get("ir", 0.0)),
+                frequency=float(data.get("frequency", 0.0)),
                 battery_voltage=float(data.get("battery_voltage", data.get("vin", 0.0))),
                 short=bool(data.get("short", False)),
                 pwr_lim=bool(data.get("pwr_lim", False)),

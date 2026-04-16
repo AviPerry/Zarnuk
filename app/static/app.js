@@ -154,6 +154,10 @@ function updateDashboardView(device) {
   document.getElementById("last-command").textContent = device.last_command_hex || "עדיין לא נשלחה פקודה";
   document.getElementById("ir-value").textContent = device.telemetry.ir.toFixed(2);
   document.getElementById("v1-value").textContent = device.telemetry.v1.toFixed(1);
+  document.getElementById("frequency-value").textContent = device.telemetry.frequency.toFixed(1);
+  document.getElementById("resistance-value").textContent = device.telemetry.resistance.toFixed(2);
+  document.getElementById("power-value").textContent = device.telemetry.power.toFixed(1);
+  document.getElementById("battery-gauge-value").textContent = device.telemetry.battery_voltage.toFixed(2);
   document.getElementById("vin-value").textContent = device.telemetry.vin.toFixed(2);
   document.getElementById("battery-value").textContent = device.telemetry.battery_voltage.toFixed(2);
   document.getElementById("telemetry-topic-value").textContent = device.telemetry_topic;

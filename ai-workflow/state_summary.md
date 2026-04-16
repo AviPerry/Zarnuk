@@ -24,6 +24,7 @@ Frontend status:
   - add device flow
   - delete device flow from dashboard and overview cards
   - per-device MQTT topic inputs on creation
+  - monitoring gauges for `Ir`, `V1`, frequency, resistance, power, and battery voltage
 - Default seeded device list now includes only:
   - `663E8435`
 - Recent UI fixes:
@@ -54,6 +55,11 @@ Controller compatibility status:
   - frequency: `S,F,1,<value>`
 - Backend telemetry parser now supports legacy controller payload format:
   - `ch,I,V,F,STATUS`
+- Backend telemetry model now also carries:
+  - frequency
+  - derived resistance
+  - derived power
+  - battery voltage in the dashboard gauge view
 - Example verified legacy telemetry:
   - `1,4.20,228.0,1500.0,3`
 
@@ -98,6 +104,24 @@ Verified backend behavior:
   - command and control POSTs returned the expected frame hex
   - no return telemetry arrived during that run
   - `COM3` could not be inspected because it was busy
+- Additional deployed check on `2026-04-16`:
+  - deployed site <-> broker path works in both directions
+  - modem is connected to MQTT with the correct `basa/...` topics
+  - no live telemetry was seen from the modem/controller during the observation window
+  - injected command traffic did not appear on `COM3` during the forwarding check
+- Clean-port recheck on `2026-04-16`:
+  - `COM3` was confirmed free
+  - injected MQTT command frames still did not appear on `COM3`
+  - no telemetry appeared on the broker during a simultaneous listen window
+- Transparent-mode loop result on `2026-04-16`:
+  - three clean-port loops were run
+  - MQTT-to-COM3 failed in both binary and ASCII tests
+  - COM3-to-MQTT failed in a direct serial publish test
+  - `Transparent mode` is therefore currently a proven blocker
+- Distribution-mode result on `2026-04-16`:
+  - after switching the modem to `Distribution mode`, serial started receiving broker data as `1,<payload>`
+  - example observed from the site poller: `1,\x01G`
+  - chosen direction is now to support bidirectional work in `Distribution mode`
 
 Deployment readiness:
 - Project is prepared for GitHub + Render deployment.

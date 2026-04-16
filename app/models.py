@@ -19,6 +19,9 @@ class DeviceTelemetry(BaseModel):
     vin: float = 12.8
     v1: float = 0.0
     ir: float = 0.0
+    frequency: float = 0.0
+    resistance: float = 0.0
+    power: float = 0.0
     battery_voltage: float = 12.8
     healthy: bool = True
     alerts: list[AlertName] = Field(default_factory=list)

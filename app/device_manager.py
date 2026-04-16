@@ -35,6 +35,9 @@ class DeviceManager:
                     vin=vin,
                     v1=0.0,
                     ir=0.0,
+                    frequency=50.0,
+                    resistance=0.0,
+                    power=0.0,
                     battery_voltage=battery,
                     healthy=not alerts,
                     alerts=alerts,
@@ -162,6 +165,7 @@ class DeviceManager:
         vin: float,
         v1: float,
         ir: float,
+        frequency: float = 0.0,
         battery_voltage: float,
         short: bool,
         pwr_lim: bool,
@@ -178,11 +182,15 @@ class DeviceManager:
             alerts.append(AlertName.NO_LOAD)
         if battery_voltage < LOW_BAT_THRESHOLD:
             alerts.append(AlertName.LOW_BAT)
-
+        resistance = (v1 / ir) if abs(ir) > 1e-9 else 0.0
+        power = v1 * ir
         device.telemetry = DeviceTelemetry(
             vin=vin,
             v1=v1,
             ir=ir,
+            frequency=frequency,
+            resistance=resistance,
+            power=power,
             battery_voltage=battery_voltage,
             healthy=not any(alert in alerts for alert in [AlertName.SHORT, AlertName.PWR_LIM]),
             alerts=alerts,

@@ -29,6 +29,7 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - improved device card button styling/consistency
   - dashboard live updates no longer rebuild the full DOM on every telemetry/poll message
   - current/frequency inputs now preserve user focus while live updates continue
+  - dashboard monitoring view now also shows frequency, resistance, power, and battery voltage as gauges
 - Polling UX hardening:
   - backend `G` poll commands are now silent for the UI
   - `last_command_hex` is no longer overwritten by background `G`
@@ -62,6 +63,10 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - current command now uses `S,I,1,<value>`
   - frequency command now uses `S,F,1,<value>`
   - backend telemetry parser now supports legacy controller payload format `ch,I,V,F,STATUS`
+  - backend telemetry state now carries `frequency`
+  - backend also derives:
+    - `resistance = V1 / Ir`
+    - `power = V1 * Ir`
 
 ### MQTT Decisions
 - Initial target broker was HiveMQ Cloud.
@@ -143,6 +148,7 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - `AT+MQTTCID:basa-663E8435-modem`
   - publish topic: `basa/663E8435/telemetry`
   - subscribe topic: `basa/663E8435/command`
+  - MQTT serial mode is now confirmed working in `Distribution mode`
 - Verified modem status:
   - `AT+MQTTSTA:Connected`
   - rechecked successfully after topic migration to `basa/...`
@@ -181,6 +187,42 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - backend `last_command_hex` ended at `01 47 00`, confirming automatic `G` poll activity
   - no fresh telemetry returned during this test window, so the device eventually appeared offline
   - direct serial verification on `COM3` was blocked because the port was already in use by another process
+- Additional deployed end-to-end verification on `2026-04-16`:
+  - Render site login succeeded at `https://zarnuk-1.onrender.com`
+  - deployed `GET /api/devices/663E8435` succeeded
+  - deployed `POST /api/devices/663E8435/output` published `01 53 2C 53 2C 31 2C 30 00`
+  - local MQTT subscriber received that exact frame on `basa/663E8435/command`
+  - publishing test telemetry `1,4.20,228.0,1500.0,3` to `basa/663E8435/telemetry` updated the deployed site state to `online=true`
+  - therefore deployed site <-> broker communication is confirmed working in both directions
+
+### Latest Modem/Broker Verification
+- On `2026-04-16`, modem AT checks showed:
+  - `AT+MQTTSTA:Connected`
+  - publish topic still set to `basa/663E8435/telemetry`
+  - subscribe topic still set to `basa/663E8435/command`
+- A 12-second broker listen window on `basa/663E8435/telemetry` received no live modem/controller messages
+- Injecting `01 53 2C 53 2C 31 2C 30 00` to `basa/663E8435/command` did not produce observable bytes on `COM3` during the check window
+- Current strongest suspicion:
+  - the missing path is now modem/controller-side forwarding or controller-originated telemetry generation, not the website/broker path
+- Clean-port verification on `2026-04-16` after fully closing `USR-CAT1`:
+  - `COM3` opened successfully with no contention
+  - injecting `01 47 00`, `01 53 2C 53 2C 31 2C 30 00`, and `01 53 2C 49 2C 31 2C 31 2E 32 30 30 00` to `basa/663E8435/command` still produced no bytes on `COM3`
+  - simultaneous 15-second listening on `COM3` and `basa/663E8435/telemetry` produced no serial bytes and no telemetry messages
+  - this strengthens the conclusion that the currently configured modem path is not forwarding MQTT traffic onto RS485 and is not publishing controller data back to MQTT
+- Transparent-mode retest loops on `2026-04-16`:
+  - loop 1: verified `AT+MQTTMOD:0`, `AT+MQTTSTA:Connected`, and correct `basa/...` topics, then injected binary MQTT frames to `basa/663E8435/command`; no bytes appeared on `COM3`
+  - loop 2: after the modem appeared back in data path, injected both ASCII and binary MQTT payloads to `basa/663E8435/command`; still no bytes appeared on `COM3`
+  - loop 3: wrote serial payloads directly to `COM3` while listening on `basa/663E8435/telemetry`; no telemetry was published
+  - conclusion: in the current real setup, `Transparent mode` is not functioning as a live bridge in either direction
+- Distribution-mode breakthrough on `2026-04-16`:
+  - after switching the modem MQTT serial mode to `Distribution mode`, subscribed MQTT data started appearing on serial as `1,<payload>`
+  - observed examples from the website poll loop:
+    - `1,\x01G`
+  - this confirms the modem does bridge broker -> serial in `Distribution mode`
+  - architectural implication:
+    - broker-to-controller path can work if the controller strips the `1,` topic symbol prefix
+    - controller-to-broker path can work if the controller publishes serial data in the format `1,<payload>` so the modem maps it to topic 1
+  - current preferred direction is to keep `Distribution mode` and adapt the controller/protocol handling around the `1,` prefix
 
 ### Remaining Modem-Path Uncertainty
 - Command-path delivery from MQTT back onto `COM3` is now confirmed.
