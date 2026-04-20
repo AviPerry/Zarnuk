@@ -8,13 +8,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Awaitable, Callable, Optional
 
-from .config import (
-    DEFAULT_POLL_SECONDS,
-    LOW_BAT_THRESHOLD,
-    MQTT_COMMAND_TOPIC,
-    MQTT_TELEMETRY_TOPIC,
-    ONLINE_TIMEOUT_SECONDS,
-)
+from .config import DEFAULT_POLL_SECONDS, LOW_BAT_THRESHOLD, ONLINE_TIMEOUT_SECONDS
 from .models import AlertName, DeviceState, DeviceTelemetry, EventEnvelope
 from .protocol import build_command_frame, frame_to_hex, validate_sn
 
@@ -36,7 +30,7 @@ class DeviceManager:
         if loaded:
             self.devices = loaded
             return
-        self._seed_default_device()
+        self._seed_devices()
         self._persist_devices()
 
     def _read_device_store(self) -> dict[str, DeviceState]:
@@ -53,52 +47,38 @@ class DeviceManager:
                 device = DeviceState.model_validate(raw)
             except Exception:
                 continue
-            device.command_topic = MQTT_COMMAND_TOPIC
-            device.telemetry_topic = MQTT_TELEMETRY_TOPIC
             devices[device.sn] = device
         return devices
 
-    def _seed_default_device(self) -> None:
-        sn = "6673842E"
-        vin = 12.7
-        battery = 12.6
-        alerts = [AlertName.LOW_BAT] if battery < LOW_BAT_THRESHOLD else []
-        self.devices[sn] = DeviceState(
-            sn=sn,
-            name="",
-            command_topic=MQTT_COMMAND_TOPIC,
-            telemetry_topic=MQTT_TELEMETRY_TOPIC,
-            online=True,
-            telemetry=DeviceTelemetry(
-                vin=vin,
-                v1=0.0,
-                ir=0.0,
-                frequency=50.0,
-                resistance=0.0,
-                power=0.0,
-                battery_voltage=battery,
-                healthy=not alerts,
-                alerts=alerts,
-            ),
-            last_seen_epoch=time.time(),
-        )
+    def _seed_devices(self) -> None:
+        for sn, vin, battery, online in [
+            ("6673842E", 12.7, 12.6, True),
+        ]:
+            alerts = [AlertName.LOW_BAT] if battery < LOW_BAT_THRESHOLD else []
+            self.devices[sn] = DeviceState(
+                sn=sn,
+                name="",
+                command_topic=f"basa/{sn}/command",
+                telemetry_topic=f"basa/{sn}/telemetry",
+                online=online,
+                telemetry=DeviceTelemetry(
+                    vin=vin,
+                    v1=0.0,
+                    ir=0.0,
+                    frequency=50.0,
+                    resistance=0.0,
+                    power=0.0,
+                    battery_voltage=battery,
+                    healthy=not alerts,
+                    alerts=alerts,
+                ),
+                last_seen_epoch=time.time() if online else 0.0,
+            )
 
     def _persist_devices(self) -> None:
         DEVICE_STORE_PATH.parent.mkdir(parents=True, exist_ok=True)
         payload = {
-            "devices": [
-                {
-                    "sn": device.sn,
-                    "name": device.name,
-                    "command_topic": MQTT_COMMAND_TOPIC,
-                    "telemetry_topic": MQTT_TELEMETRY_TOPIC,
-                    "online": device.online,
-                    "telemetry": device.telemetry.model_dump(mode="json"),
-                    "last_seen_epoch": device.last_seen_epoch,
-                    "last_command_hex": device.last_command_hex,
-                }
-                for device in self.devices.values()
-            ]
+            "devices": [device.model_dump(mode="json") for device in self.devices.values()]
         }
         DEVICE_STORE_PATH.write_text(json.dumps(payload, ensure_ascii=True, indent=2), encoding="utf-8")
 
@@ -135,15 +115,20 @@ class DeviceManager:
     async def list_devices(self) -> list[DeviceState]:
         return list(self.devices.values())
 
-    async def add_device(self, sn: str, name: str = "") -> DeviceState:
+    async def add_device(self, sn: str, command_topic: str, telemetry_topic: str, name: str = "") -> DeviceState:
         valid_sn = validate_sn(sn)
         if valid_sn in self.devices:
             raise ValueError(f"Device {valid_sn} already exists")
+        for device in self.devices.values():
+            if device.command_topic == command_topic.strip():
+                raise ValueError(f"Command topic already in use: {command_topic}")
+            if device.telemetry_topic == telemetry_topic.strip():
+                raise ValueError(f"Telemetry topic already in use: {telemetry_topic}")
         device = DeviceState(
             sn=valid_sn,
             name=name.strip(),
-            command_topic=MQTT_COMMAND_TOPIC,
-            telemetry_topic=MQTT_TELEMETRY_TOPIC,
+            command_topic=command_topic.strip(),
+            telemetry_topic=telemetry_topic.strip(),
         )
         self.devices[valid_sn] = device
         self._persist_devices()
@@ -234,14 +219,7 @@ class DeviceManager:
         no_load: bool,
     ) -> None:
         valid_sn = validate_sn(sn)
-        device = self.devices.setdefault(
-            valid_sn,
-            DeviceState(
-                sn=valid_sn,
-                command_topic=MQTT_COMMAND_TOPIC,
-                telemetry_topic=MQTT_TELEMETRY_TOPIC,
-            ),
-        )
+        device = self.devices.setdefault(valid_sn, DeviceState(sn=valid_sn))
         next_vin = device.telemetry.vin if vin is None else vin
         next_battery_voltage = device.telemetry.battery_voltage if battery_voltage is None else battery_voltage
         alerts: list[AlertName] = []
@@ -271,8 +249,6 @@ class DeviceManager:
         )
         device.online = True
         device.last_seen_epoch = time.time()
-        device.command_topic = MQTT_COMMAND_TOPIC
-        device.telemetry_topic = MQTT_TELEMETRY_TOPIC
         self._persist_devices()
         await self._publish_device(valid_sn)
 

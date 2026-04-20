@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>משדר זרנוק</title>
-  <link rel="stylesheet" href="/static/styles.css?v=20260420a" />
+  <link rel="stylesheet" href="/static/styles.css?v=20260420b" />
 </head>
 <body>
   <div class="app-shell">
@@ -12,7 +12,7 @@
       <div>
         <p class="eyebrow">ניהול מערכות</p>
         <h1>משדר זרנוק</h1>
-        <p class="hero-copy">לוח בקרה לניטור ושליטה בבקרי STM32 דרך MQTT, עם תצוגת מצב חיה וניהול מסודר של כל בקר לפי SN.</p>
+        <p class="hero-copy">לוח בקרה לניטור ושליטה במערכות מחוברות, עם מסך פירוט ייעודי לכל התקן.</p>
       </div>
       <div class="hero-panel">
         <span class="label">מצב חיבור</span>
@@ -27,7 +27,7 @@
     <section class="toolbar">
       <div>
         <h2>מסך הבית</h2>
-        <p>חיפוש לפי SN, הוספת בקר חדש, ושמירת שם ידידותי שיעזור לזכור איפה כל יחידה מותקנת.</p>
+        <p>חיפוש לפי מספר סידורי, הוספת התקן חדש או מעבר למסך הפירוט.</p>
       </div>
       <div class="toolbar-actions">
         <label class="search">
@@ -36,12 +36,20 @@
         </label>
         <form id="add-device-form" class="add-device-form">
           <label>
-            SN
+            הוספת התקן
             <input id="add-device-input" type="text" maxlength="8" placeholder="SN בן 8 תווים" />
           </label>
           <label>
             שם מזהה
-            <input id="add-device-name-input" type="text" maxlength="80" placeholder="למשל: ארון ראשי / קו 2 / רכב שירות" />
+            <input id="add-device-name-input" type="text" maxlength="80" placeholder="למשל: ארון ראשי" />
+          </label>
+          <label>
+            Topic פקודות
+            <input id="add-command-topic-input" type="text" placeholder="basa/DEVICE/command" />
+          </label>
+          <label>
+            Topic טלמטריה
+            <input id="add-telemetry-topic-input" type="text" placeholder="basa/DEVICE/telemetry" />
           </label>
           <button class="action-button" type="submit">הוסף</button>
         </form>
@@ -56,7 +64,7 @@
       <div>
         <button class="ghost-button" id="back-button">חזרה</button>
         <h2 id="device-title">התקן</h2>
-        <p>ניטור ושליטה בערוץ 2, כאשר הפקודות נשלחות ב־topic קבוע והזיהוי מתבצע לפי ה־SN של הבקר.</p>
+        <p>ניטור ושליטה בערוץ 2.</p>
       </div>
       <div class="device-status-line">
         <span id="device-online-badge" class="status-badge">לא ידוע</span>
@@ -97,10 +105,9 @@
           </div>
         </div>
         <div class="topic-box">
-          <div><strong>SN</strong><span id="device-sn-value" class="mono"></span></div>
           <div><strong>שם מזהה</strong><span id="device-name-value"></span></div>
-          <div><strong>Topic פקודות</strong><span class="mono">basa/command</span></div>
-          <div><strong>Topic טלמטריה</strong><span class="mono">basa/telemetry</span></div>
+          <div><strong>Topic טלמטריה</strong><span id="telemetry-topic-value" class="mono"></span></div>
+          <div><strong>Topic פקודות</strong><span id="command-topic-value" class="mono"></span></div>
         </div>
       </article>
 
@@ -146,6 +153,6 @@
     </section>
   </template>
 
-  <script src="/static/app.js?v=20260420a" type="module"></script>
+  <script src="/static/app.js?v=20260420b" type="module"></script>
 </body>
 </html>

@@ -216,7 +216,7 @@ async def list_devices() -> DeviceListResponse:
 @app.post("/api/devices", status_code=201)
 async def create_device(payload: CreateDeviceRequest):
     try:
-        device = await manager.add_device(payload.sn, payload.name)
+        device = await manager.add_device(payload.sn, payload.command_topic, payload.telemetry_topic, payload.name)
         if mqtt_client is not None:
             await mqtt_client.sync_subscriptions()
         return device

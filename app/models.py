@@ -54,12 +54,22 @@ class CommandRequest(BaseModel):
 class CreateDeviceRequest(BaseModel):
     sn: str
     name: str = ""
+    command_topic: str
+    telemetry_topic: str
 
     @field_validator("sn")
     @classmethod
     def validate_new_device_sn(cls, value: str) -> str:
         validate_sn(value)
         return normalize_sn(value)
+
+    @field_validator("command_topic", "telemetry_topic")
+    @classmethod
+    def validate_topic(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Topic is required")
+        return cleaned
 
     @field_validator("name")
     @classmethod
