@@ -3,37 +3,15 @@
 - [x] Build FastAPI + frontend MVP
 - [x] Add backend MQTT support and `.env` config
 - [x] Confirm modem serial communication on `COM3`
-- [x] Reconfigure modem from old EMQX settings to HiveMQ settings
-- [x] Verify which HiveMQ credentials are actually valid for the broker
-- [ ] Determine why `AT+MQTTSTA` remains `Disconnected`
-- [x] Prove whether modem MQTT and TLS work against a control broker
-- [x] Check whether the modem exposes documented SNI support
-- [x] Reconfigure modem to a working public broker with unique topics
-- [x] Prove modem subscription payloads are forwarded onto `COM3`/RS485
-- [x] Verify backend telemetry ingest and command publish against the public broker
-- [x] Fix frontend watch-state and search-reset issues before UI review
-- [x] Translate UI to Hebrew and rename app title
-- [x] Add device create/delete flow to the app
-- [x] Remove SN from outgoing command payloads and rely on topic-based routing
-- [x] Align backend control commands and telemetry parsing to the legacy RS485 controller format
-- [x] Add per-device MQTT topic control to device creation flow
-- [x] Add login page and protect frontend/API/WebSocket with credentials
 - [x] Prepare project for GitHub + Render deployment
-- [x] Push project to GitHub repository `AviPerry/Zarnuk`
-- [x] Pin Render Python version to `3.11.11`
-- [x] Reduce default seeded devices to the current controller SN
-- [x] Add delete action directly on overview device cards
-- [x] Replace default MQTT topics from `zeliger/...` to `basa/...`
-- [x] Stop full dashboard rerender on each live polling update
-- [x] Silence UI updates for background `G` polling unless status changes
-- [x] Expand dashboard monitoring to show frequency, resistance, power, and battery voltage gauges
-- [x] Align legacy `G` telemetry parsing with the original PC GUI protocol
-- [x] Separate legacy `V1` handling from battery voltage without changing controller firmware
-- [x] Remove redundant bottom `VIN`/battery summary from the dashboard
-- [x] Add frontend API fallback sync and cache-busting for deployed static assets
-- [x] Restore SN-prefixed RS485 command frames and move site control to channel 2
-- [x] Prove broker -> serial forwarding works in modem `Distribution mode`
-- [x] Prove `Transparent mode` is blocked in both directions after three clean-port test loops
-- [ ] Adapt controller/protocol handling for bidirectional `Distribution mode` operation
-- [ ] Create and configure Render Web Service from the GitHub repo
-- [ ] Run full hardware end-to-end validation with the actual controller responses
+- [x] Translate UI to Hebrew and rename the app
+- [x] Add login page and protect frontend/API/WebSocket
+- [x] Align backend control commands and telemetry parsing with the legacy controller protocol
+- [x] Restore SN-prefixed command frames and move control to channel 2
+- [x] Stop dashboard rerender churn during background `G` polling
+- [x] Add device create/delete flow
+- [x] Add friendly device names persisted for the web UI
+- [x] Move app from per-device MQTT topics to fixed shared topics `basa/command` and `basa/telemetry`
+- [x] Keep command routing by SN while using shared topics
+- [ ] Validate full shared-topic end-to-end behavior with the real controller and modem
+- [ ] Deploy the latest shared-topic build to Render and verify it live

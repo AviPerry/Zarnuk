@@ -12,7 +12,13 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import AUTH_COOKIE_NAME, AUTH_COOKIE_VALUE, AUTH_PASSWORD, AUTH_USERNAME
 from .device_manager import DeviceManager
-from .models import CommandRequest, ControlUpdateRequest, CreateDeviceRequest, DeviceListResponse
+from .models import (
+    CommandRequest,
+    ControlUpdateRequest,
+    CreateDeviceRequest,
+    DeviceListResponse,
+    UpdateDeviceRequest,
+)
 from .mqtt_client import HiveMQClient
 from .simulator import TelemetrySimulator
 
@@ -210,7 +216,7 @@ async def list_devices() -> DeviceListResponse:
 @app.post("/api/devices", status_code=201)
 async def create_device(payload: CreateDeviceRequest):
     try:
-        device = await manager.add_device(payload.sn, payload.command_topic, payload.telemetry_topic)
+        device = await manager.add_device(payload.sn, payload.name)
         if mqtt_client is not None:
             await mqtt_client.sync_subscriptions()
         return device
@@ -233,6 +239,16 @@ async def delete_device(sn: str) -> Response:
     try:
         await manager.remove_device(sn)
         return Response(status_code=204)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=f"Device {sn} not found") from exc
+
+
+@app.patch("/api/devices/{sn}")
+async def update_device(sn: str, payload: UpdateDeviceRequest):
+    try:
+        return await manager.update_device_name(sn, payload.name)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except KeyError as exc:

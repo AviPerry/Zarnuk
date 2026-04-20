@@ -32,6 +32,7 @@ class DeviceTelemetry(BaseModel):
 
 class DeviceState(BaseModel):
     sn: str
+    name: str = ""
     command_topic: str = ""
     telemetry_topic: str = ""
     online: bool = False
@@ -52,8 +53,7 @@ class CommandRequest(BaseModel):
 
 class CreateDeviceRequest(BaseModel):
     sn: str
-    command_topic: str
-    telemetry_topic: str
+    name: str = ""
 
     @field_validator("sn")
     @classmethod
@@ -61,13 +61,19 @@ class CreateDeviceRequest(BaseModel):
         validate_sn(value)
         return normalize_sn(value)
 
-    @field_validator("command_topic", "telemetry_topic")
+    @field_validator("name")
     @classmethod
-    def validate_topic(cls, value: str) -> str:
-        cleaned = value.strip()
-        if not cleaned:
-            raise ValueError("Topic is required")
-        return cleaned
+    def validate_name(cls, value: str) -> str:
+        return value.strip()
+
+
+class UpdateDeviceRequest(BaseModel):
+    name: str = ""
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        return value.strip()
 
 
 class ControlUpdateRequest(BaseModel):

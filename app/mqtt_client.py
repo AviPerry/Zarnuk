@@ -9,14 +9,17 @@ from typing import Any, Optional
 import paho.mqtt.client as mqtt
 
 from .config import (
+    MQTT_COMMAND_TOPIC,
     MQTT_CLIENT_ID,
     MQTT_ENABLED,
     MQTT_HOST,
     MQTT_KEEPALIVE,
     MQTT_PASSWORD,
     MQTT_PORT,
+    MQTT_TELEMETRY_TOPIC,
     MQTT_TLS,
     MQTT_USERNAME,
+    START_CMD,
     START_TLM,
 )
 from .device_manager import DeviceManager
@@ -70,26 +73,21 @@ class HiveMQClient:
     async def publish_command(self, sn: str, frame: bytes, command: str) -> None:
         if not self.client or not self.ready:
             return
-        device = await self.manager.get_device(sn)
         payload = frame
         properties = mqtt.Properties(mqtt.PacketTypes.PUBLISH)
         properties.UserProperty = [("sn", sn), ("command", command)]
-        result = self.client.publish(device.command_topic, payload=payload, qos=1, properties=properties)
+        result = self.client.publish(MQTT_COMMAND_TOPIC, payload=payload, qos=1, properties=properties)
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.warning("MQTT publish failed for %s: rc=%s", sn, result.rc)
 
     async def sync_subscriptions(self) -> None:
         if not self.client or not self.ready:
             return
-        topics = {(device.telemetry_topic, 1) for device in self.manager.devices.values() if device.telemetry_topic}
-        for topic, qos in topics:
-            self.client.subscribe(topic, qos=qos)
+        self.client.subscribe(MQTT_TELEMETRY_TOPIC, qos=1)
 
     def _on_connect(self, client: mqtt.Client, _: Any, __: Any, reason_code: Any, ___: Any = None) -> None:
         logger.info("MQTT connected with reason code %s", reason_code)
-        topics = {(device.telemetry_topic, 1) for device in self.manager.devices.values() if device.telemetry_topic}
-        for topic, qos in topics:
-            client.subscribe(topic, qos=qos)
+        client.subscribe(MQTT_TELEMETRY_TOPIC, qos=1)
         if self._loop is not None:
             self._loop.call_soon_threadsafe(self._connected.set)
 
@@ -127,8 +125,16 @@ class HiveMQClient:
         if not payload:
             return None
 
+        embedded_sn: Optional[str] = None
         if payload[0] == START_TLM:
             payload = payload[1:]
+        elif payload[0] == START_CMD:
+            payload = payload[1:]
+            try:
+                raw_sn, payload = payload.split(b",", 1)
+                embedded_sn = raw_sn.decode("ascii", errors="ignore").strip().upper()
+            except ValueError:
+                embedded_sn = None
 
         try:
             text = payload.decode("utf-8", errors="ignore")
@@ -141,18 +147,27 @@ class HiveMQClient:
             return None
 
         if text.startswith("{"):
-            data = json.loads(text)
+            try:
+                data = json.loads(text)
+            except json.JSONDecodeError:
+                return None
             if "sn" not in data:
-                data["sn"] = self._infer_sn_from_topic(topic)
+                inferred_sn = embedded_sn or self._infer_sn_from_topic(topic)
+                if not inferred_sn:
+                    return None
+                data["sn"] = inferred_sn
             return data
 
-        legacy = self._decode_legacy_csv(text, topic)
+        legacy = self._decode_legacy_csv(text, topic, embedded_sn)
         if legacy:
             return legacy
 
         if "," in text:
             sn, raw = text.split(",", 1)
-            data: dict[str, Any] = {"sn": sn.strip().upper()}
+            resolved_sn = embedded_sn or sn.strip().upper()
+            if not resolved_sn:
+                return None
+            data: dict[str, Any] = {"sn": resolved_sn}
             for chunk in raw.split(","):
                 if "=" not in chunk:
                     continue
@@ -169,7 +184,7 @@ class HiveMQClient:
 
         return None
 
-    def _decode_legacy_csv(self, text: str, topic: str) -> Optional[dict[str, Any]]:
+    def _decode_legacy_csv(self, text: str, topic: str, embedded_sn: Optional[str]) -> Optional[dict[str, Any]]:
         parts = [part.strip() for part in text.split(",")]
         if len(parts) >= 6 and self._looks_like_distribution_prefixed_legacy(parts):
             parts = parts[1:]
@@ -185,7 +200,9 @@ class HiveMQClient:
         except ValueError:
             return None
 
-        sn = self._infer_sn_from_topic(topic)
+        sn = embedded_sn or self._infer_sn_from_topic(topic)
+        if not sn:
+            return None
         return {
             "sn": sn,
             "channel": channel,
@@ -214,12 +231,18 @@ class HiveMQClient:
             return False
         return 1 <= topic_index <= 10 and channel in {0, 1, 2}
 
-    def _infer_sn_from_topic(self, topic: str) -> str:
-        for device in self.manager.devices.values():
-            if device.telemetry_topic == topic or device.command_topic == topic:
-                return device.sn
+    def _infer_sn_from_topic(self, topic: str) -> Optional[str]:
+        matches = [
+            device.sn
+            for device in self.manager.devices.values()
+            if device.telemetry_topic == topic or device.command_topic == topic
+        ]
+        if len(matches) == 1:
+            return matches[0]
         for part in topic.split("/"):
             candidate = part.strip().upper()
             if len(candidate) == 8 and candidate.isalnum():
                 return candidate
-        return "6673842E"
+        if len(self.manager.devices) == 1:
+            return next(iter(self.manager.devices))
+        return None

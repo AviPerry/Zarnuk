@@ -1,3 +1,6 @@
+const FIXED_COMMAND_TOPIC = "basa/command";
+const FIXED_TELEMETRY_TOPIC = "basa/telemetry";
+
 const state = { devices: [], selectedSn: null, watchedSn: null, ws: null, search: "" };
 
 const appEl = document.getElementById("app");
@@ -33,10 +36,38 @@ function connectSocket() {
   });
   state.ws.addEventListener("message", (event) => {
     const message = JSON.parse(event.data);
-    if (message.type === "devices.snapshot") state.devices = message.payload.devices;
-    if (message.type === "device.updated") upsertDevice(message.payload.device);
+    if (message.type === "devices.snapshot") {
+      state.devices = (message.payload.devices || []).map(normalizeDevice);
+    }
+    if (message.type === "device.updated") {
+      upsertDevice(normalizeDevice(message.payload.device));
+    }
     refresh();
   });
+}
+
+function normalizeDevice(device) {
+  return {
+    ...device,
+    name: device.name || "",
+    command_topic: FIXED_COMMAND_TOPIC,
+    telemetry_topic: FIXED_TELEMETRY_TOPIC,
+    telemetry: {
+      vin: 0,
+      v1: 0,
+      ir: 0,
+      frequency: 0,
+      resistance: 0,
+      power: 0,
+      battery_voltage: 0,
+      healthy: true,
+      alerts: [],
+      output_enabled: false,
+      target_current: 0,
+      target_frequency: 0,
+      ...device.telemetry,
+    },
+  };
 }
 
 function upsertDevice(device) {
@@ -47,16 +78,14 @@ function upsertDevice(device) {
   }
 
   const existing = state.devices[index];
-  state.devices[index] = {
+  state.devices[index] = normalizeDevice({
     ...existing,
     ...device,
-    command_topic: device.command_topic || existing.command_topic,
-    telemetry_topic: device.telemetry_topic || existing.telemetry_topic,
     telemetry: {
       ...existing.telemetry,
       ...device.telemetry,
     },
-  };
+  });
 }
 
 function refresh() {
@@ -83,24 +112,27 @@ function renderOverview() {
   const grid = document.getElementById("device-grid");
   const addForm = document.getElementById("add-device-form");
   const addInput = document.getElementById("add-device-input");
-  const commandTopicInput = document.getElementById("add-command-topic-input");
-  const telemetryTopicInput = document.getElementById("add-telemetry-topic-input");
+  const addNameInput = document.getElementById("add-device-name-input");
   input.value = state.search;
+
   const draw = () => {
     state.search = input.value.trim().toUpperCase();
-    const filtered = state.devices.filter((device) => device.sn.includes(state.search));
+    const filtered = state.devices.filter((device) => {
+      const haystack = `${device.sn} ${device.name}`.toUpperCase();
+      return haystack.includes(state.search);
+    });
     grid.replaceChildren(...filtered.map(buildDeviceCard));
     if (!filtered.length) {
-      grid.innerHTML = `<article class="panel"><h3>לא נמצאו התקנים</h3><p>נסה מספר סידורי אחר.</p></article>`;
+      grid.innerHTML = `<article class="panel"><h3>לא נמצאו התקנים</h3><p>נסה מספר סידורי אחר או שם שהוגדר לבקר.</p></article>`;
     }
   };
+
   input.addEventListener("input", draw);
   addForm.addEventListener("submit", async (event) => {
     event.preventDefault();
-    await createDevice(addInput.value, commandTopicInput.value, telemetryTopicInput.value);
+    await createDevice(addInput.value, addNameInput.value);
     addInput.value = "";
-    commandTopicInput.value = "";
-    telemetryTopicInput.value = "";
+    addNameInput.value = "";
   });
   draw();
 }
@@ -114,12 +146,14 @@ function buildDeviceCard(device) {
       <span class="status-badge ${device.online ? "status-online" : "status-offline"}">${device.online ? "online" : "offline"}</span>
     </header>
     <div class="meta-grid">
-      <span>סוללה <strong>${device.telemetry.battery_voltage.toFixed(2)} V</strong></span>
+      <span>שם <strong>${escapeHtml(device.name || "ללא שם")}</strong></span>
       <span>תקינות <strong>${device.telemetry.healthy ? "תקין" : "דורש בדיקה"}</strong></span>
-      <span>Ir <strong>${device.telemetry.ir.toFixed(2)} A</strong></span>
-      <span>V1 <strong>${device.telemetry.v1.toFixed(1)} V</strong></span>
-      <span>פקודות <strong class="mono">${device.command_topic}</strong></span>
-      <span>טלמטריה <strong class="mono">${device.telemetry_topic}</strong></span>
+      <span>סוללה <strong>${Number(device.telemetry.battery_voltage || 0).toFixed(2)} V</strong></span>
+      <span>Ir <strong>${Number(device.telemetry.ir || 0).toFixed(2)} A</strong></span>
+      <span>V1 <strong>${Number(device.telemetry.v1 || 0).toFixed(1)} V</strong></span>
+      <span>תדר <strong>${Number(device.telemetry.frequency || 0).toFixed(1)} kHz</strong></span>
+      <span>פקודות <strong class="mono">${FIXED_COMMAND_TOPIC}</strong></span>
+      <span>טלמטריה <strong class="mono">${FIXED_TELEMETRY_TOPIC}</strong></span>
     </div>
     <div class="device-card-actions">
       <button class="ghost-button" type="button" data-action="open">פתח</button>
@@ -140,7 +174,7 @@ function renderDashboard() {
   appEl.replaceChildren(template.content.cloneNode(true));
   const device = state.devices.find((entry) => entry.sn === state.selectedSn);
   if (!device) {
-    appEl.innerHTML = `<article class="panel"><h3>התקן לא נמצא</h3><p>המספר הסידורי ${state.selectedSn || ""} לא קיים במערכת.</p></article>`;
+    appEl.innerHTML = `<article class="panel"><h3>התקן לא נמצא</h3><p>המספר הסידורי ${escapeHtml(state.selectedSn || "")} לא קיים במערכת.</p></article>`;
     return;
   }
 
@@ -155,6 +189,10 @@ function renderDashboard() {
     event.preventDefault();
     submitControls(device.sn);
   });
+  document.getElementById("device-name-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    saveDeviceName(device.sn);
+  });
 
   updateDashboardView(device);
   watchDevice(device.sn);
@@ -163,26 +201,30 @@ function renderDashboard() {
 
 function updateDashboardView(device) {
   document.getElementById("device-title").textContent = `התקן ${device.sn}`;
+  document.getElementById("device-sn-value").textContent = device.sn;
+  document.getElementById("device-name-value").textContent = device.name || "ללא שם";
   const statusEl = document.getElementById("device-online-badge");
   statusEl.textContent = device.online ? "online" : "offline";
   statusEl.className = `status-badge ${device.online ? "status-online" : "status-offline"}`;
   document.getElementById("last-command").textContent = device.last_command_hex || "עדיין לא נשלחה פקודה";
-  document.getElementById("ir-value").textContent = device.telemetry.ir.toFixed(2);
-  document.getElementById("v1-value").textContent = device.telemetry.v1.toFixed(1);
-  document.getElementById("frequency-value").textContent = device.telemetry.frequency.toFixed(1);
-  document.getElementById("resistance-value").textContent = device.telemetry.resistance.toFixed(2);
-  document.getElementById("power-value").textContent = device.telemetry.power.toFixed(1);
-  document.getElementById("battery-gauge-value").textContent = device.telemetry.battery_voltage.toFixed(2);
-  document.getElementById("telemetry-topic-value").textContent = device.telemetry_topic;
-  document.getElementById("command-topic-value").textContent = device.command_topic;
+  document.getElementById("ir-value").textContent = Number(device.telemetry.ir || 0).toFixed(2);
+  document.getElementById("v1-value").textContent = Number(device.telemetry.v1 || 0).toFixed(1);
+  document.getElementById("frequency-value").textContent = Number(device.telemetry.frequency || 0).toFixed(1);
+  document.getElementById("resistance-value").textContent = Number(device.telemetry.resistance || 0).toFixed(2);
+  document.getElementById("power-value").textContent = Number(device.telemetry.power || 0).toFixed(1);
+  document.getElementById("battery-gauge-value").textContent = Number(device.telemetry.battery_voltage || 0).toFixed(2);
 
   const currentInput = document.getElementById("current-input");
   const frequencyInput = document.getElementById("frequency-input");
+  const nameInput = document.getElementById("device-name-input");
   if (document.activeElement !== currentInput) {
-    currentInput.value = device.telemetry.target_current.toFixed(2);
+    currentInput.value = Number(device.telemetry.target_current || 0).toFixed(2);
   }
   if (document.activeElement !== frequencyInput) {
-    frequencyInput.value = device.telemetry.target_frequency.toFixed(2);
+    frequencyInput.value = Number(device.telemetry.target_frequency || 0).toFixed(2);
+  }
+  if (document.activeElement !== nameInput) {
+    nameInput.value = device.name || "";
   }
 
   const lowBat = device.telemetry.alerts.includes("LOW-BAT");
@@ -200,18 +242,33 @@ function updateDashboardView(device) {
   }));
 }
 
-async function createDevice(sn, commandTopic, telemetryTopic) {
+async function createDevice(sn, name) {
   const response = await fetch("/api/devices", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sn, command_topic: commandTopic, telemetry_topic: telemetryTopic }),
+    body: JSON.stringify({ sn, name }),
   });
   if (!response.ok) {
     const error = await response.json();
     showOverviewFeedback(error.detail || "הוספת ההתקן נכשלה", true);
     return;
   }
-  showOverviewFeedback(`ההתקן ${sn.toUpperCase()} נוסף בהצלחה.`);
+  showOverviewFeedback(`ההתקן ${sn.trim().toUpperCase()} נוסף בהצלחה.`);
+}
+
+async function saveDeviceName(sn) {
+  const name = document.getElementById("device-name-input").value;
+  const response = await fetch(`/api/devices/${sn}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    showFeedback(error.detail || "שמירת השם נכשלה", true);
+    return;
+  }
+  showFeedback("השם נשמר בהצלחה.");
 }
 
 async function fetchDevices() {
@@ -219,10 +276,10 @@ async function fetchDevices() {
     const response = await fetch("/api/devices");
     if (!response.ok) return;
     const data = await response.json();
-    state.devices = data.devices || [];
+    state.devices = (data.devices || []).map(normalizeDevice);
     refresh();
   } catch (_) {
-    // Keep WebSocket as the main live path; this is only a resilience fallback.
+    // WebSocket remains the primary live channel.
   }
 }
 
@@ -231,10 +288,10 @@ async function fetchDevice(sn) {
     const response = await fetch(`/api/devices/${sn}`);
     if (!response.ok) return;
     const device = await response.json();
-    upsertDevice(device);
+    upsertDevice(normalizeDevice(device));
     refresh();
   } catch (_) {
-    // Ignore; live updates still arrive through WebSocket when available.
+    // Live updates still arrive through WebSocket.
   }
 }
 
@@ -279,7 +336,7 @@ async function submitControls(sn) {
     showFeedback(error.detail || "עדכון ההגדרות נכשל", true);
     return;
   }
-  showFeedback("פקודת זרם/תדר נשלחה לבקר.");
+  showFeedback("פקודת זרם ותדר נשלחה לבקר.");
 }
 
 function watchDevice(sn) {
@@ -288,12 +345,16 @@ function watchDevice(sn) {
     state.ws.send(JSON.stringify({ action: "unwatch", sn: state.watchedSn }));
   }
   state.watchedSn = sn;
-  if (state.ws?.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify({ action: "watch", sn }));
+  if (state.ws?.readyState === WebSocket.OPEN) {
+    state.ws.send(JSON.stringify({ action: "watch", sn }));
+  }
 }
 
 function unwatchDevice(sn) {
   if (state.watchedSn !== sn) return;
-  if (state.ws?.readyState === WebSocket.OPEN) state.ws.send(JSON.stringify({ action: "unwatch", sn }));
+  if (state.ws?.readyState === WebSocket.OPEN) {
+    state.ws.send(JSON.stringify({ action: "unwatch", sn }));
+  }
   state.watchedSn = null;
 }
 
@@ -311,8 +372,19 @@ function showOverviewFeedback(message, isError = false) {
   feedback.className = `command-feedback ${isError ? "status-offline" : "status-online"}`;
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 window.addEventListener("hashchange", route);
-window.addEventListener("beforeunload", () => { if (state.selectedSn) unwatchDevice(state.selectedSn); });
+window.addEventListener("beforeunload", () => {
+  if (state.selectedSn) unwatchDevice(state.selectedSn);
+});
 
 connectSocket();
 fetchDevices();

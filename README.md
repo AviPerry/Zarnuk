@@ -13,8 +13,9 @@ The project currently includes:
 - Hebrew user interface
 - Systems overview screen
 - Per-device dashboard
-- Device create/delete flow
-- Per-device MQTT command and telemetry topics
+- Add and delete device flow
+- Editable friendly name per device SN
+- Shared MQTT topics with device identification by SN inside the payload/frame
 - Legacy controller protocol compatibility
 
 ## Default Login
@@ -29,52 +30,58 @@ Change these in production with environment variables.
 Outgoing controller command frames are built as:
 
 ```text
-0x01 + command + 0x00
+0x01 + SN + ',' + command + 0x00
 ```
 
 Examples:
 
 - Poll status: `G`
-- Output on: `S,S,1,1`
-- Output off: `S,S,1,0`
-- Set current: `S,I,1,<value>`
-- Set frequency: `S,F,1,<value>`
+- Output on channel 2: `S,S,2,1`
+- Output off channel 2: `S,S,2,0`
+- Set current on channel 2: `S,I,2,<value>`
+- Set frequency on channel 2: `S,F,2,<value>`
 
-Device identity is no longer embedded in the payload. Routing is topic-based.
+The MQTT topics are now shared for all devices:
+
+- Command topic: `basa/command`
+- Telemetry topic: `basa/telemetry`
+
+Device routing is based on the controller `SN`.
 
 ## Telemetry Support
 
-The backend supports legacy controller telemetry in this format:
+The backend supports:
 
-```text
-ch,I,V,F,STATUS
-```
+- legacy controller telemetry in the format `ch,I,V,F,STATUS`
+- distribution-mode payloads such as `1,ch,I,V,F,STATUS`
+- SN-prefixed framed payloads that arrive on the shared telemetry topic
+- JSON telemetry, ideally including an `sn` field
 
-Example:
+Example legacy telemetry:
 
 ```text
 1,4.20,228.0,1500.0,3
 ```
 
-`STATUS` is interpreted as a bitmask for controller alerts such as `SHORT`, `PWR-LIM`, and `NO-LOAD`.
+`STATUS` is interpreted as a bitmask for alerts such as `SHORT`, `PWR-LIM`, and `NO-LOAD`.
 
-## MQTT Setup
+Note:
+If multiple controllers publish to the same shared telemetry topic, the payload should include the device `SN` or arrive in an SN-framed format so the backend can attribute telemetry to the correct device.
 
-The current working development broker is:
+## Device Management
 
-- Host: `broker.hivemq.com`
-- Port: `1883`
-- TLS: `false`
+Each device record contains:
 
-Example device topics:
+- `sn`
+- editable `name`
+- online/offline state
+- last telemetry snapshot
 
-- Command topic: `basa/6673842E/command`
-- Telemetry topic: `basa/6673842E/telemetry`
+The device list is persisted locally in:
 
-Each device can define its own:
-
-- `command_topic`
-- `telemetry_topic`
+```text
+app/data/devices.json
+```
 
 ## Local Run
 
@@ -104,12 +111,11 @@ MQTT_HOST=broker.hivemq.com
 MQTT_PORT=1883
 MQTT_TLS=false
 MQTT_CLIENT_ID=basa-web-backend
+MQTT_COMMAND_TOPIC=basa/command
+MQTT_TELEMETRY_TOPIC=basa/telemetry
 AUTH_USERNAME=Admin
 AUTH_PASSWORD=Admin123
-SESSION_SECRET=replace-with-a-long-random-secret
 ```
-
-Use `.env.example` as the starting point.
 
 ## Render Deployment
 
@@ -131,7 +137,6 @@ Required Render environment variables:
 
 - `AUTH_USERNAME`
 - `AUTH_PASSWORD`
-- `SESSION_SECRET`
 
 Optional MQTT environment variables:
 
@@ -140,19 +145,8 @@ Optional MQTT environment variables:
 - `MQTT_PORT`
 - `MQTT_TLS`
 - `MQTT_CLIENT_ID`
-
-## Public vs Private on Render
-
-If you deploy this as a `Web Service`, it is publicly reachable through a Render `onrender.com` URL.
-
-If you do not want public internet access, Render's official guidance is to use a `Private Service` instead. A private service is reachable only from your other Render services on the same private network and does not get a public `onrender.com` URL.
-
-For this project:
-
-- Use `Web Service` if you want to open the dashboard from your browser or phone
-- Use `Private Service` only if another public service will sit in front of it
-
-Application-level login is still recommended even for a public web service.
+- `MQTT_COMMAND_TOPIC`
+- `MQTT_TELEMETRY_TOPIC`
 
 ## Hardware Notes
 
@@ -167,9 +161,9 @@ Verified:
 
 - modem AT communication
 - modem MQTT connectivity to HiveMQ public broker
-- command delivery from MQTT to serial path
+- command delivery from MQTT to serial path in distribution mode
 - backend telemetry ingest from MQTT
 
 Still pending:
 
-- full end-to-end validation with the real controller behavior under live hardware conditions
+- full end-to-end validation with the real controller behavior under live hardware conditions across the shared-topic setup
