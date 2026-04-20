@@ -68,8 +68,8 @@ The current working development broker is:
 
 Example device topics:
 
-- Command topic: `basa/663E8435/command`
-- Telemetry topic: `basa/663E8435/telemetry`
+- Command topic: `basa/6673842E/command`
+- Telemetry topic: `basa/6673842E/telemetry`
 
 Each device can define its own:
 

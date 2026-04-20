@@ -19,8 +19,8 @@ def validate_sn(sn: str) -> str:
 
 
 def build_command_frame(sn: str, command: str) -> bytes:
-    validate_sn(sn)
-    return bytes([START_CMD]) + command.encode("ascii") + TERMINATOR
+    normalized = validate_sn(sn)
+    return bytes([START_CMD]) + normalized.encode("ascii") + b"," + command.encode("ascii") + TERMINATOR
 
 
 def frame_to_hex(frame: bytes) -> str:

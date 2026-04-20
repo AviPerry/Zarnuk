@@ -18,7 +18,7 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - command routing and telemetry simulation
 - Backend validates 8-char uppercase alphanumeric SN values.
 - Backend builds protocol frames as:
-  - `0x01 + command + 0x00`
+  - `0x01 + SN + ',' + command + 0x00`
 - Backend expects telemetry beginning with `0x05`.
 - Low battery protection is implemented in backend and UI.
 - Backend is now reconfigured to use the working public broker path from `.env`.
@@ -45,7 +45,7 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - delete device from device dashboard
   - delete device directly from overview cards
   - `online/offline` indication remains visible
-  - default seed list was reduced to a single device: `663E8435`
+  - default seed list is currently a single device: `6673842E`
 - Device creation now requires per-device MQTT topics:
   - `command_topic`
   - `telemetry_topic`
@@ -64,8 +64,10 @@ Build a web system for monitoring and controlling STM32-based devices through a 
   - project was pushed to GitHub repository `https://github.com/AviPerry/Zarnuk.git`
   - local branch `main` now tracks `origin/main`
 - Backend/controller alignment update:
-  - current command now uses `S,I,1,<value>`
-  - frequency command now uses `S,F,1,<value>`
+  - command frames now again include the device SN because the real controller expects SN-prefixed RS485 frames
+  - remote output control now targets channel `2`
+  - current command now uses `S,I,2,<value>`
+  - frequency command now uses `S,F,2,<value>`
   - backend telemetry parser now supports legacy controller payload format `ch,I,V,F,STATUS`
   - backend telemetry state now carries `frequency`
   - backend also derives:
@@ -84,8 +86,8 @@ Build a web system for monitoring and controlling STM32-based devices through a 
 - Current working broker for development is HiveMQ public broker.
 - Backend is configured to support real MQTT through `.env`.
 - Current working topics chosen for the modem path are:
-  - device publish telemetry to `basa/663E8435/telemetry`
-  - device subscribe for commands on `basa/663E8435/command`
+  - device publish telemetry to `basa/6673842E/telemetry`
+  - device subscribe for commands on `basa/6673842E/command`
 - Device routing is now topic-based.
 - Command payloads no longer include the serial number.
 - Each device now owns its own command/telemetry topics in the backend model.

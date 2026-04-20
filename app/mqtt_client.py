@@ -222,4 +222,4 @@ class HiveMQClient:
             candidate = part.strip().upper()
             if len(candidate) == 8 and candidate.isalnum():
                 return candidate
-        return "663E8435"
+        return "6673842E"

@@ -28,7 +28,7 @@ Frontend status:
   - battery voltage now appears only in the gauge area; the old bottom `VIN`/battery summary row was removed
   - frontend now has API fallback fetches and device-state merging to reduce empty-topic/stale-state issues
 - Default seeded device list now includes only:
-  - `663E8435`
+  - `6673842E`
 - Recent UI fixes:
   - search no longer resets during live updates
   - repeated watch subscriptions were fixed
@@ -42,10 +42,10 @@ Authentication status:
 - Login is handled by `/api/auth/login`.
 
 Protocol status:
-- Outgoing command payloads no longer include the serial number.
+- Outgoing command frames now include the serial number again.
 - Device routing is topic-based.
 - Current command frame format is:
-  - `0x01 + command + 0x00`
+  - `0x01 + SN + ',' + command + 0x00`
 - Verified live command outputs on `COM3`:
   - `ON` -> `01 53 2C 53 2C 31 2C 31 00`
   - `OFF` -> `01 53 2C 53 2C 31 2C 30 00`
@@ -53,8 +53,9 @@ Protocol status:
 
 Controller compatibility status:
 - Backend control commands were aligned to the legacy RS485 reference format:
-  - current: `S,I,1,<value>`
-  - frequency: `S,F,1,<value>`
+  - output enable: `S,S,2,<0|1>`
+  - current: `S,I,2,<value>`
+  - frequency: `S,F,2,<value>`
 - Backend telemetry parser now supports legacy controller payload format:
   - `ch,I,V,F,STATUS`
 - Backend telemetry model now also carries:
@@ -150,6 +151,6 @@ Important defaults currently in use:
 - Login:
   - `Admin / Admin123`
 - Example working device/topics:
-  - SN: `663E8435`
-  - command topic: `basa/663E8435/command`
-  - telemetry topic: `basa/663E8435/telemetry`
+  - SN: `6673842E`
+  - command topic: `basa/6673842E/command`
+  - telemetry topic: `basa/6673842E/telemetry`

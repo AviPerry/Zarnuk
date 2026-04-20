@@ -23,8 +23,8 @@ MQTT_TLS = os.getenv("MQTT_TLS", "true").strip().lower() in {"1", "true", "yes",
 MQTT_USERNAME = os.getenv("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
 MQTT_CLIENT_ID = os.getenv("MQTT_CLIENT_ID", "basa-web-backend")
-MQTT_COMMAND_TOPIC = os.getenv("MQTT_COMMAND_TOPIC", "basa/663E8435/command")
-MQTT_TELEMETRY_TOPIC = os.getenv("MQTT_TELEMETRY_TOPIC", "basa/663E8435/telemetry")
+MQTT_COMMAND_TOPIC = os.getenv("MQTT_COMMAND_TOPIC", "basa/6673842E/command")
+MQTT_TELEMETRY_TOPIC = os.getenv("MQTT_TELEMETRY_TOPIC", "basa/6673842E/telemetry")
 MQTT_KEEPALIVE = int(os.getenv("MQTT_KEEPALIVE", "60"))
 
 AUTH_USERNAME = os.getenv("AUTH_USERNAME", "Admin")

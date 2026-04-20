@@ -20,9 +20,9 @@ services:
       - key: MQTT_CLIENT_ID
         value: basa-web-backend
       - key: MQTT_COMMAND_TOPIC
-        value: basa/663E8435/command
+        value: basa/6673842E/command
       - key: MQTT_TELEMETRY_TOPIC
-        value: basa/663E8435/telemetry
+        value: basa/6673842E/telemetry
       - key: AUTH_USERNAME
         value: Admin
       - key: AUTH_PASSWORD

@@ -23,7 +23,7 @@ class DeviceManager:
 
     def _seed_devices(self) -> None:
         for sn, vin, battery, online in [
-            ("663E8435", 12.7, 12.6, True),
+            ("6673842E", 12.7, 12.6, True),
         ]:
             alerts = [AlertName.LOW_BAT] if battery < LOW_BAT_THRESHOLD else []
             self.devices[sn] = DeviceState(
@@ -144,17 +144,17 @@ class DeviceManager:
         if enabled and device.telemetry.battery_voltage < LOW_BAT_THRESHOLD:
             raise ValueError("Remote start blocked: battery voltage is below the configured threshold")
         device.telemetry.output_enabled = enabled
-        return await self.send_command(sn, "S,S,1,1" if enabled else "S,S,1,0")
+        return await self.send_command(sn, "S,S,2,1" if enabled else "S,S,2,0")
 
     async def update_controls(self, sn: str, current: Optional[float], frequency: Optional[float]) -> list[bytes]:
         device = await self.get_device(sn)
         frames: list[bytes] = []
         if current is not None:
             device.telemetry.target_current = current
-            frames.append(await self.send_command(sn, f"S,I,1,{current:.3f}"))
+            frames.append(await self.send_command(sn, f"S,I,2,{current:.3f}"))
         if frequency is not None:
             device.telemetry.target_frequency = frequency
-            frames.append(await self.send_command(sn, f"S,F,1,{frequency:.1f}"))
+            frames.append(await self.send_command(sn, f"S,F,2,{frequency:.1f}"))
         await self._publish_device(device.sn)
         return frames
 

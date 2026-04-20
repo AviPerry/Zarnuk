@@ -21,7 +21,7 @@
 - [x] Prepare project for GitHub + Render deployment
 - [x] Push project to GitHub repository `AviPerry/Zarnuk`
 - [x] Pin Render Python version to `3.11.11`
-- [x] Reduce default seeded devices to only `663E8435`
+- [x] Reduce default seeded devices to the current controller SN
 - [x] Add delete action directly on overview device cards
 - [x] Replace default MQTT topics from `zeliger/...` to `basa/...`
 - [x] Stop full dashboard rerender on each live polling update
@@ -31,6 +31,7 @@
 - [x] Separate legacy `V1` handling from battery voltage without changing controller firmware
 - [x] Remove redundant bottom `VIN`/battery summary from the dashboard
 - [x] Add frontend API fallback sync and cache-busting for deployed static assets
+- [x] Restore SN-prefixed RS485 command frames and move site control to channel 2
 - [x] Prove broker -> serial forwarding works in modem `Distribution mode`
 - [x] Prove `Transparent mode` is blocked in both directions after three clean-port test loops
 - [ ] Adapt controller/protocol handling for bidirectional `Distribution mode` operation
